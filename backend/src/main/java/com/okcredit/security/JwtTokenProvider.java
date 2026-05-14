@@ -20,8 +20,11 @@ public class JwtTokenProvider {
             @Value("${app.jwt.secret}") String jwtSecret,
             @Value("${app.jwt.expiration}") long jwtExpiration,
             @Value("${app.jwt.refresh-expiration}") long refreshExpiration) {
-        this.jwtSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(
-                java.util.Base64.getEncoder().encodeToString(jwtSecret.getBytes())));
+        try {
+            this.jwtSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        } catch (Exception e) {
+            this.jwtSecret = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        }
         this.jwtExpiration = jwtExpiration;
         this.refreshExpiration = refreshExpiration;
     }

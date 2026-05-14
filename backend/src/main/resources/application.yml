@@ -44,7 +44,7 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:OkCreditSecretKeyForJWTTokenGeneration2024SecureAndLongEnough}
+    secret: ${JWT_SECRET:CRnm8dGMX8/H+V5fyJ5bAH1FUdwzAUND5ltZ4hYqR4Y=}
     expiration: 86400000
     refresh-expiration: 604800000
 
