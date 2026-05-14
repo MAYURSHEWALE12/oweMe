@@ -55,16 +55,24 @@ function Navbar() {
 }
 
 function FloatingCards() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   return (
     <div className="relative w-full h-[500px] md:h-[600px]">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-cyan-500/5 rounded-3xl" />
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="absolute w-full h-full opacity-20">
-          <div className={`absolute w-72 h-72 rounded-full blur-3xl ${i === 0 ? 'bg-blue-500 top-10 -left-20' : i === 1 ? 'bg-purple-500 bottom-10 -right-20' : 'bg-cyan-500 top-1/2 left-1/3'}`} />
+        <div key={i} className="absolute w-full h-full opacity-10 md:opacity-20">
+          <div className={`absolute w-72 h-72 rounded-full blur-2xl md:blur-3xl ${i === 0 ? 'bg-blue-500 top-10 -left-20' : i === 1 ? 'bg-purple-500 bottom-10 -right-20' : 'bg-cyan-500 top-1/2 left-1/3'}`} />
         </div>
       ))}
 
-      <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-8 left-4 right-4 bg-white shadow-xl dark:bg-white/5 dark:shadow-none backdrop-blur-xl rounded-2xl border border-gray-100 dark:border-white/10 p-4 transform-gpu">
+      <motion.div animate={isMobile ? {} : { y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-8 left-4 right-4 bg-white shadow-xl dark:bg-white/5 dark:shadow-none backdrop-blur-xl rounded-2xl border border-gray-100 dark:border-white/10 p-4 transform-gpu">
         <div className="flex items-center justify-between mb-3"><span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Recent Activity</span><span className="text-[10px] text-gray-400 dark:text-gray-500">Today</span></div>
         {[{ name: 'Priya', amt: '+₹500', color: 'text-green-400', bg: 'bg-green-500/10' }, { name: 'Rahul', amt: '-₹200', color: 'text-red-400', bg: 'bg-red-500/10' }, { name: 'Amit', amt: '₹0', color: 'text-gray-400', bg: 'bg-gray-500/10' }].map(({ name, amt, color, bg }) => (
           <div key={name} className="flex items-center gap-3 py-2.5 border-b border-gray-100 dark:border-white/5 last:border-0">
@@ -75,7 +83,7 @@ function FloatingCards() {
         ))}
       </motion.div>
 
-      <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} className="absolute bottom-8 left-4 right-4 bg-white shadow-xl dark:bg-white/5 dark:shadow-none backdrop-blur-xl rounded-2xl border border-gray-100 dark:border-white/10 p-4 transform-gpu">
+      <motion.div animate={isMobile ? {} : { y: [0, 8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} className="absolute bottom-8 left-4 right-4 bg-white shadow-xl dark:bg-white/5 dark:shadow-none backdrop-blur-xl rounded-2xl border border-gray-100 dark:border-white/10 p-4 transform-gpu">
         <div className="flex items-center justify-between mb-3"><span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Split Summary</span><span className="text-[10px] text-gray-400 dark:text-gray-500">Trip to Goa</span></div>
         <div className="space-y-2">{['You paid ₹2,400', 'Rahul owes ₹800', 'Priya owes ₹1,200', 'Neha owes ₹400'].map((t, i) => (
           <div key={i} className="flex items-center gap-2 text-xs"><div className="w-5 h-5 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center"><FiCheck size={10} className="text-blue-400" /></div><span className="text-gray-600 dark:text-gray-300">{t}</span></div>
@@ -83,8 +91,8 @@ function FloatingCards() {
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 flex justify-between"><span className="text-xs text-gray-400 dark:text-gray-500">You'll get back</span><span className="text-sm font-bold text-green-600 dark:text-green-400">₹2,400</span></div>
       </motion.div>
 
-      <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-1/3 -right-3 w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-xl shadow-green-500/20"><FiArrowDown size={24} className="text-white" /></motion.div>
-      <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} className="absolute bottom-1/3 -left-3 w-16 h-16 rounded-2xl bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center shadow-xl shadow-red-500/20"><FiArrowUp size={24} className="text-white" /></motion.div>
+      <motion.div animate={isMobile ? {} : { scale: [1, 1.05, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-1/3 -right-3 w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-xl shadow-green-500/20"><FiArrowDown size={24} className="text-white" /></motion.div>
+      <motion.div animate={isMobile ? {} : { scale: [1, 1.05, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} className="absolute bottom-1/3 -left-3 w-16 h-16 rounded-2xl bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center shadow-xl shadow-red-500/20"><FiArrowUp size={24} className="text-white" /></motion.div>
     </div>
   );
 }
@@ -99,8 +107,8 @@ function Hero() {
       <div className="absolute inset-0 bg-gray-50 dark:bg-gray-950" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-gray-50 dark:via-gray-950 to-gray-50 dark:to-gray-950" />
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px]" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[120px]" />
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 md:w-96 md:h-96 bg-blue-500/20 rounded-full blur-2xl md:blur-[120px]" />
+      <div className="absolute bottom-1/4 right-1/4 w-72 h-72 md:w-96 md:h-96 bg-purple-500/20 rounded-full blur-2xl md:blur-[120px]" />
 
       <motion.div style={{ opacity, y }} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -301,7 +309,7 @@ function CTA() {
   return (
     <section className="relative py-24 md:py-32 px-4 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 via-white to-purple-100/50 dark:from-blue-600/20 dark:via-gray-950 dark:to-purple-600/20" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-blue-500/10 rounded-full blur-3xl md:blur-[150px]" />
       <motion.div {...fadeUp} className="max-w-2xl mx-auto text-center relative">
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight">Start tracking money<br />with friends today</h2>
         <p className="text-gray-600 dark:text-gray-400 mt-4 text-lg">Join 50,000+ users who never forget an IOU.</p>
