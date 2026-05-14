@@ -30,7 +30,7 @@ spring:
 
   mail:
     host: smtp-relay.brevo.com
-    port: 2525
+    port: 465
     username: ${BREVO_USERNAME}
     password: ${BREVO_PASSWORD}
     properties:
@@ -38,12 +38,11 @@ spring:
         from: 10ninjagod@gmail.com
         smtp:
           auth: true
+          ssl:
+            enable: true
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-          starttls:
-            enable: true
-            required: true
 
 app:
   jwt:
