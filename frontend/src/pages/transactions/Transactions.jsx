@@ -180,7 +180,10 @@ export default function Transactions() {
       else { await receivePayment(payload); toast.success(`₹${amount} taken`); }
       setAmount(''); setNote('');
       setRefreshKey(k => k + 1);
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+    } catch (err) { 
+      const msg = err?.response?.data?.message || err?.response?.data;
+      toast.error(typeof msg === 'object' ? JSON.stringify(msg) : (msg || 'Failed')); 
+    }
     finally { setSubmitting(false); }
   };
 
@@ -240,7 +243,10 @@ export default function Transactions() {
       }, { headers: { Authorization: `Bearer ${token()}` } });
       toast.success('Sent to ' + emailAddr);
       setShowEmailModal(false); setEmailAddr('');
-    } catch (err) { toast.error(err?.response?.data?.error || 'Failed to send'); }
+    } catch (err) { 
+      const msg = err?.response?.data?.error;
+      toast.error(typeof msg === 'object' ? (msg.message || JSON.stringify(msg)) : (msg || 'Failed to send')); 
+    }
     finally { setSendingEmail(false); }
   };
 

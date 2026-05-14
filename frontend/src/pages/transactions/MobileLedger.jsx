@@ -120,7 +120,10 @@ export default function MobileLedger({ friend, onBack }) {
     if (!editTxn) return;
     setSubmitting(true);
     try { await updateTransaction(editTxn.id, { amount: parseFloat(editTxn.editAmount), description: editTxn.editDescription, note: editTxn.editNote }); toast.success('Updated'); setEditTxn(null); setRefreshKey(k => k + 1); }
-    catch (err) { toast.error(err.response?.data?.message || 'Update failed'); }
+    catch (err) { 
+      const msg = err.response?.data?.message || err.response?.data;
+      toast.error(typeof msg === 'object' ? JSON.stringify(msg) : (msg || 'Update failed')); 
+    }
     finally { setSubmitting(false); }
   };
 

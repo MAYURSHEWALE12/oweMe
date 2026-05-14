@@ -121,7 +121,10 @@ export default function Reports() {
       toast.success('Report sent to ' + emailAddr);
       setShowEmailModal(false);
       setEmailAddr('');
-    } catch (err) { toast.error(err?.response?.data?.error || 'Failed to send email'); }
+    } catch (err) { 
+      const msg = err?.response?.data?.error || err?.response?.data;
+      toast.error(typeof msg === 'object' ? JSON.stringify(msg) : (msg || 'Failed to send email')); 
+    }
     finally { setSendingEmail(false); }
   };
 
