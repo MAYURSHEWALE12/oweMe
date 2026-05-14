@@ -1,0 +1,42 @@
+# Java
+*.class
+*.jar
+*.war
+target/
+build/
+.idea/
+*.iml
+*.ipr
+*.iws
+.settings/
+.project
+.classpath
+.settings/
+bin/
+
+# Node
+node_modules/
+dist/
+build/
+*.log
+.npm/
+.eslintcache
+
+# Env
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+log/
+*.log
+
+# VS Code
+.vscode/
+
+# Docker
+mysql_data/
