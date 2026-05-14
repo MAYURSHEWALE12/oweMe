@@ -24,7 +24,16 @@ public class JwtTokenProvider {
         try {
             key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
         } catch (Exception e) {
-            key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+            byte[] bytes = jwtSecret.getBytes();
+            if (bytes.length < 32) {
+                try {
+                    java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                    bytes = md.digest(bytes);
+                } catch (Exception ex) {
+                    // Fallback should never happen as SHA-256 is guaranteed
+                }
+            }
+            key = Keys.hmacShaKeyFor(bytes);
         }
         this.jwtSecret = key;
         this.jwtExpiration = jwtExpiration;
