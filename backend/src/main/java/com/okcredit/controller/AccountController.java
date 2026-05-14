@@ -31,18 +31,22 @@ public class AccountController {
 
         if (user.getEmail() != null) {
             var customers = customerRepository.findByEmail(user.getEmail());
-            if (customers.isPresent() && customers.get().getUserId() == null) {
-                customers.get().setUserId(user.getId());
-                customerRepository.save(customers.get());
-                linked++;
+            for (var customer : customers) {
+                if (customer.getUserId() == null) {
+                    customer.setUserId(user.getId());
+                    customerRepository.save(customer);
+                    linked++;
+                }
             }
         }
         if (user.getPhone() != null) {
             var customers = customerRepository.findByPhone(user.getPhone());
-            if (customers.isPresent() && customers.get().getUserId() == null) {
-                customers.get().setUserId(user.getId());
-                customerRepository.save(customers.get());
-                linked++;
+            for (var customer : customers) {
+                if (customer.getUserId() == null) {
+                    customer.setUserId(user.getId());
+                    customerRepository.save(customer);
+                    linked++;
+                }
             }
         }
 

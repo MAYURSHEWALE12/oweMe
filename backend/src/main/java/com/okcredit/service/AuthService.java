@@ -63,8 +63,8 @@ public class AuthService {
         user = userRepository.save(user);
         final Long savedUserId = user.getId();
 
-        customerRepository.findByEmail(request.getEmail()).ifPresent(c -> { c.setUserId(savedUserId); customerRepository.save(c); });
-        customerRepository.findByPhone(request.getPhone()).ifPresent(c -> { c.setUserId(savedUserId); customerRepository.save(c); });
+        customerRepository.findByEmail(request.getEmail()).forEach(c -> { c.setUserId(savedUserId); customerRepository.save(c); });
+        customerRepository.findByPhone(request.getPhone()).forEach(c -> { c.setUserId(savedUserId); customerRepository.save(c); });
 
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
