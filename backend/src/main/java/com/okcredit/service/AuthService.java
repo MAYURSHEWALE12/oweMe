@@ -79,12 +79,16 @@ public class AuthService {
     }
 
     public AuthDto.AuthResponse login(AuthDto.LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        userDetailsService.loadByEmail(request.getEmail()).getUsername(),
-                        request.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            userDetailsService.loadByEmail(request.getEmail()).getUsername(),
+                            request.getPassword()
+                    )
+            );
+        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+            throw new BadRequestException("Invalid credentials");
+        }
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadRequestException("Invalid credentials"));
