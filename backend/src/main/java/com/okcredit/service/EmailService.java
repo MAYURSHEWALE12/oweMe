@@ -51,9 +51,16 @@ public class EmailService {
                 request.put("attachment", Collections.singletonList(attachment));
             }
 
+            if (apiKey == null || apiKey.length() < 10) {
+                log.error("CRITICAL: BREVO_PASSWORD is missing or too short!");
+            } else {
+                log.info("Using API Key starting with: {}...", apiKey.substring(0, 8));
+            }
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("api-key", apiKey);
+            headers.set("x-sib-api-key", apiKey);
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
             
