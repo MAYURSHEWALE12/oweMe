@@ -53,11 +53,11 @@ public class CustomerService {
 
         // Prevent duplicate email in same shop
         if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
-            customerRepository.findByEmail(dto.getEmail()).ifPresent(existing -> {
+            for (Customer existing : customerRepository.findByEmail(dto.getEmail())) {
                 if (existing.getShop().getId().equals(shopId) && existing.getActive()) {
                     throw new BadRequestException("A friend with this email already exists");
                 }
-            });
+            }
         }
 
         Long linkedUserId = null;
@@ -72,11 +72,11 @@ public class CustomerService {
         if (linkedUserId != null && currentUser.getEmail() != null) {
             userRepository.findById(linkedUserId).ifPresent(friendUser -> {
                 if (friendUser.getShop() != null) {
-                    customerRepository.findByEmail(currentUser.getEmail()).ifPresent(reverse -> {
+                    for (Customer reverse : customerRepository.findByEmail(currentUser.getEmail())) {
                         if (reverse.getShop().getId().equals(friendUser.getShop().getId()) && reverse.getActive()) {
                             throw new BadRequestException("Already friends with this person");
                         }
-                    });
+                    }
                 }
             });
         }
