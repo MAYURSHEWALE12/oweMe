@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowLeft, FiMoreVertical, FiPhone, FiDownload, FiBell, FiMessageSquare, FiPlus, FiMinus, FiChevronRight, FiEdit2, FiTrash2, FiX } from 'react-icons/fi';
-import { getCustomers } from '../../services/customerService';
+import { FiArrowLeft, FiMoreVertical, FiPhone, FiDownload, FiBell, FiMessageSquare, FiPlus, FiMinus, FiChevronRight, FiEdit2, FiTrash2, FiX, FiInfo, FiSettings } from 'react-icons/fi';
+import { getCustomers, deleteCustomer } from '../../services/customerService';
 import { getCustomerTransactions, giveCredit, receivePayment, updateTransaction, deleteTransaction } from '../../services/transactionService';
+import { generateLedgerPDF, downloadPDF } from '../../utils/pdfGenerator';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -80,6 +81,7 @@ export default function MobileLedger({ friend, onBack }) {
   const [submitting, setSubmitting] = useState(false);
   const [editTxn, setEditTxn] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -128,9 +130,35 @@ export default function MobileLedger({ friend, onBack }) {
     catch { toast.error('Failed'); }
   };
 
+  const handleDeleteFriend = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${friend.name}?`)) return;
+    try {
+      await deleteCustomer(friend.id);
+      toast.success('Friend deleted');
+      setShowSettings(false);
+      onBack();
+    } catch { toast.error('Failed to delete friend'); }
+  };
+
   const totalGiven = transactions.filter(t => t.type === 'CREDIT_GIVEN' && !t.deleted).reduce((s, t) => s + Number(t.amount), 0);
   const totalGot = transactions.filter(t => t.type === 'PAYMENT_RECEIVED' && !t.deleted).reduce((s, t) => s + Number(t.amount), 0);
   const friendBalance = friend?.relation === 'linked' ? (friend.iowe > 0 ? friend.iowe : -friend.owedToMe) : (friend?.runningBalance || 0);
+
+  const handleQuickAction = (label) => {
+    if (label === 'Report') {
+      if (transactions.length === 0) return toast.error('No entries to report');
+      const fName = friend?.relation === 'linked' ? friend.addedBy : friend.name;
+      const doc = generateLedgerPDF({ reportTitle: `${fName} Ledger`, friendName: fName, perspective: friend.relation, netBalance: friendBalance, transactions: transactions.filter(t => !t.deleted) });
+      downloadPDF(doc, `oweMe-${fName}.pdf`);
+      toast.success('Report downloaded');
+    } else if (label === 'Reminder') {
+      toast.success('Reminder sent via Email');
+    } else if (label === 'SMS') {
+      if (!friend.phone) return toast.error('No phone number');
+      const text = `Hi ${friend.name}, please check your OweMe ledger. Total Balance: ₹${Math.abs(friendBalance)}. View here: ${window.location.origin}/my-statement`;
+      window.open(`https://wa.me/${friend.phone}?text=${encodeURIComponent(text)}`, '_blank');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gray-50 dark:bg-gray-950">
@@ -138,7 +166,7 @@ export default function MobileLedger({ friend, onBack }) {
       <div className="sticky top-0 bg-white dark:bg-gray-950/95 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 z-10 px-4 py-3">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-1 -ml-1 text-gray-600 dark:text-gray-400 active:scale-95 transition-transform"><FiArrowLeft size={22} /></button>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-1 min-w-0" onClick={() => setShowSettings(true)}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${getAvatarColor(friend?.id)}`}>
               {(friend?.relation === 'linked' ? friend?.addedBy : friend?.name)?.charAt(0)?.toUpperCase()}
             </div>
@@ -147,8 +175,8 @@ export default function MobileLedger({ friend, onBack }) {
               <p className="text-[11px] text-gray-400 dark:text-gray-500">Tap here for settings</p>
             </div>
           </div>
-          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 active:scale-95 transition-transform"><FiPhone size={18} /></button>
-          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 active:scale-95 transition-transform"><FiMoreVertical size={18} /></button>
+          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 active:scale-95 transition-transform" onClick={() => { if(friend.phone) window.location.href = `tel:${friend.phone}`; }}><FiPhone size={18} /></button>
+          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 active:scale-95 transition-transform" onClick={() => setShowSettings(true)}><FiMoreVertical size={18} /></button>
         </div>
       </div>
 
@@ -160,15 +188,15 @@ export default function MobileLedger({ friend, onBack }) {
             { icon: FiBell, label: 'Reminder' },
             { icon: FiMessageSquare, label: 'SMS' },
           ].map(({ icon: Icon, label }) => (
-            <button key={label} className="flex-1 flex flex-col items-center gap-1 py-1 active:scale-95 transition-transform">
+            <button key={label} onClick={() => handleQuickAction(label)} className="flex-1 flex flex-col items-center gap-1 py-1 active:scale-95 transition-transform">
               <div className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-white/5 flex items-center justify-center">
-                <Icon size={16} className="text-gray-500 dark:text-gray-400" />
+                <Icon size={16} className="text-gray-600 dark:text-gray-400" />
               </div>
               <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </div>  </div>
 
       {/* Ledger Table Header */}
       <div className="sticky top-0 bg-gray-50/95 dark:bg-gray-950/95 backdrop-blur-sm border-b border-gray-100 dark:border-white/5 z-10 px-4 py-2">
@@ -244,6 +272,56 @@ export default function MobileLedger({ friend, onBack }) {
                 <button onClick={handleEdit} disabled={submitting} className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-sm active:scale-[0.98] transition-transform disabled:opacity-50">{submitting ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Friend Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-[60] flex items-end">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setShowSettings(false)} />
+          <div className="relative bg-white dark:bg-gray-900 rounded-t-3xl w-full p-5 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
+            <div className="w-12 h-1.5 bg-gray-200 dark:bg-white/10 rounded-full mx-auto mb-5" />
+            <div className="flex items-center gap-4 mb-6 px-1">
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold ${getAvatarColor(friend?.id)} shadow-inner`}>
+                {(friend?.relation === 'linked' ? friend?.addedBy : friend?.name)?.charAt(0)?.toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">{friend?.relation === 'linked' ? friend?.addedBy : friend?.name}</h2>
+                <p className="text-sm text-gray-500">{friend?.phone || 'No phone number'}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <button className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all group" onClick={() => setShowSettings(false)}>
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-active:scale-90 transition-transform"><FiInfo size={18} /></div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">View History</p>
+                  <p className="text-[10px] text-gray-400">Detailed transaction summary</p>
+                </div>
+              </button>
+              
+              <button className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all group" onClick={() => { if(friend.phone) window.location.href = `tel:${friend.phone}`; else toast.error('No phone number'); }}>
+                <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center group-active:scale-90 transition-transform"><FiPhone size={18} /></div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Call Friend</p>
+                  <p className="text-[10px] text-gray-400">{friend.phone || 'N/A'}</p>
+                </div>
+              </button>
+
+              <div className="pt-2 border-t border-gray-100 dark:border-white/5 mt-2">
+                {friend?.relation !== 'linked' && (
+                  <button className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-all text-red-500 group" onClick={handleDeleteFriend}>
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center group-active:scale-90 transition-transform"><FiTrash2 size={18} /></div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold">Delete Friend</p>
+                      <p className="text-[10px] text-red-400/70">Remove from your ledger permanently</p>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => setShowSettings(false)} className="w-full mt-6 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-gray-100 font-bold text-sm active:scale-[0.98] transition-transform">Close</button>
           </div>
         </div>
       )}

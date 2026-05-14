@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiPlus, FiChevronDown, FiFilter, FiArrowUp, FiArrowDown, FiUser, FiEdit2, FiTrash2, FiX, FiDownload, FiBell, FiChevronLeft, FiChevronRight, FiClock, FiSend } from 'react-icons/fi';
-import { getCustomers, createCustomer, updateCustomer } from '../../services/customerService';
+import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '../../services/customerService';
 import { getCustomerTransactions, giveCredit, receivePayment, updateTransaction, deleteTransaction } from '../../services/transactionService';
 import { useDebounce } from '../../hooks/useDebounce';
 import { generateLedgerPDF, downloadPDF } from '../../utils/pdfGenerator';
@@ -254,6 +254,17 @@ export default function Transactions() {
     } catch (err) { console.error('Edit friend error:', err); toast.error(err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to update'); }
   };
 
+  const handleDeleteFriend = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selected.name}? This will remove them from your list.`)) return;
+    try {
+      await deleteCustomer(selected.id);
+      toast.success('Friend deleted');
+      setShowEditFriend(false);
+      setSelected(null);
+      setRefreshKey(k => k + 1);
+    } catch (err) { toast.error('Failed to delete friend'); }
+  };
+
   const handleAddFriend = async (e) => {
     e.preventDefault();
     if (!addForm.name.trim()) { toast.error('Name is required'); return; }
@@ -473,9 +484,14 @@ export default function Transactions() {
             <div className="space-y-2.5">
               <div><label className="text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1 block">Name</label><input type="text" className="w-full bg-gray-50 dark:bg-white/5 border-0 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/30 focus:outline-none text-gray-900 dark:text-gray-100" value={editFriendForm.name} onChange={e => setEditFriendForm(p => ({ ...p, name: e.target.value }))} /></div>
               <div><label className="text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1 block">Phone</label><input type="tel" className="w-full bg-gray-50 dark:bg-white/5 border-0 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/30 focus:outline-none text-gray-900 dark:text-gray-100" value={editFriendForm.phone} onChange={e => setEditFriendForm(p => ({ ...p, phone: e.target.value }))} /></div>
-              <div className="flex justify-end gap-2.5 pt-1.5">
-                <button onClick={() => setShowEditFriend(false)} className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 font-medium text-xs hover:bg-gray-200 dark:hover:bg-white/10 transition-all">Cancel</button>
-                <button onClick={handleEditFriend} className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium text-xs hover:shadow-lg hover:shadow-blue-500/20 transition-all">Save</button>
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-white/5 mt-1">
+                {selected?.relation !== 'linked' ? (
+                  <button onClick={handleDeleteFriend} className="text-[10px] font-semibold text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">Delete Friend</button>
+                ) : <div />}
+                <div className="flex gap-2">
+                  <button onClick={() => setShowEditFriend(false)} className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 font-medium text-xs hover:bg-gray-200 dark:hover:bg-white/10 transition-all">Cancel</button>
+                  <button onClick={handleEditFriend} className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium text-xs hover:shadow-lg hover:shadow-blue-500/20 transition-all">Save</button>
+                </div>
               </div>
             </div>
           </div>

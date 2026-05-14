@@ -32,7 +32,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByIdAndShopId(Long id, Long shopId);
 
-    Optional<Customer> findByPhone(String phone);
+    List<Customer> findByPhone(String phone);
 
     Optional<Customer> findByEmail(String email);
 
