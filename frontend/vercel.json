@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://oweme-rx4r.onrender.com/api/:path*"
+    }
+  ]
+}
