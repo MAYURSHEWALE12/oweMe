@@ -1,44 +1,75 @@
 package com.okcredit.service;
 
-import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
 
 @Service
 public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
-    private final JavaMailSender mailSender;
-    private final String fromEmail;
+    
+    @Value("${BREVO_PASSWORD}")
+    private String apiKey;
 
-    public EmailService(JavaMailSender mailSender, @Value("${spring.mail.properties.mail.from}") String fromEmail) {
-        this.mailSender = mailSender;
-        this.fromEmail = fromEmail;
-    }
+    @Value("${spring.mail.properties.mail.from}")
+    private String fromEmail;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Async
     public void sendReport(String to, String subject, String body, byte[] pdfData, String pdfName) {
-        log.info("Sending email report to: {}", to);
+        log.info("Sending email report via Brevo API to: {}", to);
+        
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(buildHtml(body, pdfName), true);
-            if (pdfData != null && pdfName != null) {
-                helper.addAttachment(pdfName, new ByteArrayResource(pdfData));
+            Map<String, Object> request = new HashMap<>();
+            
+            // Sender info
+            Map<String, String> sender = new HashMap<>();
+            sender.put("name", "OweMe");
+            sender.put("email", fromEmail);
+            request.put("sender", sender);
+            
+            // Recipient info
+            Map<String, String> recipient = new HashMap<>();
+            recipient.put("email", to);
+            request.put("to", Collections.singletonList(recipient));
+            
+            request.put("subject", subject);
+            request.put("htmlContent", buildHtml(body, pdfName));
+            
+            // Attachment
+            if (pdfData != null) {
+                Map<String, String> attachment = new HashMap<>();
+                attachment.put("content", Base64.getEncoder().encodeToString(pdfData));
+                attachment.put("name", pdfName);
+                request.put("attachment", Collections.singletonList(attachment));
             }
-            mailSender.send(message);
-            log.info("Email sent successfully to: {}", to);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("api-key", apiKey);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                "https://api.brevo.com/v3/smtp/email", 
+                entity, 
+                String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Email sent successfully via API to: {}", to);
+            } else {
+                log.error("Brevo API returned error: {}", response.getBody());
+            }
         } catch (Exception e) {
-            log.error("CRITICAL: Failed to send email to {}. Error: {}", to, e.getMessage());
-            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+            log.error("CRITICAL: Failed to send email via API to {}. Error: {}", to, e.getMessage());
         }
     }
 
