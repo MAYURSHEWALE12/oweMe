@@ -140,10 +140,10 @@ export default function MobileLedger({ friend, onBack }) {
           <button onClick={onBack} className="p-1 -ml-1 text-gray-600 dark:text-gray-400 active:scale-95 transition-transform"><FiArrowLeft size={22} /></button>
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${getAvatarColor(friend?.id)}`}>
-              {friend?.name?.charAt(0)?.toUpperCase()}
+              {(friend?.relation === 'linked' ? friend?.addedBy : friend?.name)?.charAt(0)?.toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-sm text-gray-900 dark:text-gray-100 truncate">{friend?.name}</p>
+              <p className="font-bold text-sm text-gray-900 dark:text-gray-100 truncate">{friend?.relation === 'linked' ? friend?.addedBy : friend?.name}</p>
               <p className="text-[11px] text-gray-400 dark:text-gray-500">Tap here for settings</p>
             </div>
           </div>

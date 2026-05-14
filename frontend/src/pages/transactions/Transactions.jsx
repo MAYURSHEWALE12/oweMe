@@ -203,14 +203,15 @@ export default function Transactions() {
     try {
       const activeTxns = transactions.filter(t => !t.deleted);
       if (activeTxns.length === 0) { toast.error('No active transactions to export'); return; }
+      const fName = selected.relation === 'linked' ? selected.addedBy : selected.name;
       const doc = generateLedgerPDF({
-        reportTitle: `${selected.name} - Transaction Statement`,
-        friendName: selected.name,
+        reportTitle: `${fName} - Transaction Statement`,
+        friendName: fName,
         perspective: selected.relation,
         netBalance: friendBalance,
         transactions: activeTxns,
       });
-      downloadPDF(doc, `oweMe-${selected.name}-statement.pdf`);
+      downloadPDF(doc, `oweMe-${fName}-statement.pdf`);
       toast.success('Statement downloaded');
     } catch { toast.error('Failed to generate PDF'); }
   };
@@ -221,9 +222,10 @@ export default function Transactions() {
     setSendingEmail(true);
     try {
       const activeTxns = transactions.filter(t => !t.deleted);
+      const fName = selected.relation === 'linked' ? selected.addedBy : selected.name;
       const doc = generateLedgerPDF({
-        reportTitle: `${selected.name} - Transaction Statement`,
-        friendName: selected.name,
+        reportTitle: `${fName} - Transaction Statement`,
+        friendName: fName,
         perspective: selected.relation,
         netBalance: friendBalance,
         transactions: activeTxns,
@@ -231,10 +233,10 @@ export default function Transactions() {
       const pdfBase64 = doc.output('datauristring').split(',')[1];
       await axios.post(`${API}/email/send-report`, {
         to: emailAddr,
-        subject: `OweMe Statement - ${selected.name}`,
-        body: `Please find attached the transaction statement for ${selected.name} from your OweMe account.`,
+        subject: `OweMe Statement - ${fName}`,
+        body: `Please find attached the transaction statement for ${fName} from your OweMe account.`,
         pdfBase64,
-        pdfName: `oweMe-${selected.name}-statement.pdf`,
+        pdfName: `oweMe-${fName}-statement.pdf`,
       }, { headers: { Authorization: `Bearer ${token()}` } });
       toast.success('Sent to ' + emailAddr);
       setShowEmailModal(false); setEmailAddr('');
@@ -321,7 +323,7 @@ export default function Transactions() {
               ) : (
                 filteredMerged.map((c) => (
                   <motion.button key={c.id} {...cardHover} onClick={() => { setSelected(c); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left ${selected?.id === c.id ? 'bg-blue-50 dark:bg-blue-500/10 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-white/[0.03]'}`}>
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${getAvatarColor(c.id)}`}>{c.name?.charAt(0).toUpperCase()}</div>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${getAvatarColor(c.id)}`}>{(c.relation === 'linked' ? c.addedBy : c.name)?.charAt(0).toUpperCase()}</div>
                     <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{c.relation === 'linked' ? c.addedBy : c.name}</p><p className="text-[10px] text-gray-400 truncate">{c.relation === 'linked' ? (c.phone || c.name) : (c.phone || 'Friend')}</p></div>
                     <div className="text-right flex-shrink-0">
                       <p className={`text-xs font-bold ${getBalance(c) > 0 ? 'text-red-400' : 'text-green-400'}`}>{fmt(Math.abs(getBalance(c)))}</p>
@@ -346,9 +348,9 @@ export default function Transactions() {
               <div className="flex-shrink-0 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm px-3 md:px-5 py-2.5 md:py-3 border-b border-gray-100 dark:border-white/5">
                 <div className="flex items-center gap-1.5 md:gap-3">
                   <button onClick={() => { setSelected(null); setTransactions([]); }} className="md:hidden p-1 -ml-1 text-gray-500 hover:bg-white/10 rounded-lg flex-shrink-0"><FiChevronLeft size={18} /></button>
-                  <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-xs md:text-sm font-bold flex-shrink-0 ${getAvatarColor(selected.id)}`}>{selected.name?.charAt(0).toUpperCase()}</div>
+                  <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-xs md:text-sm font-bold flex-shrink-0 ${getAvatarColor(selected.id)}`}>{(selected.relation === 'linked' ? selected.addedBy : selected.name)?.charAt(0).toUpperCase()}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5"><p className="font-bold text-sm md:text-sm text-gray-900 dark:text-gray-100 truncate">{selected.name}</p>{selected.relation !== 'linked' && <button onClick={() => setShowEditFriend(true)} className="text-[10px] font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded-md transition-all flex-shrink-0">Edit</button>}</div>
+                    <div className="flex items-center gap-1.5"><p className="font-bold text-sm md:text-sm text-gray-900 dark:text-gray-100 truncate">{selected.relation === 'linked' ? selected.addedBy : selected.name}</p>{selected.relation !== 'linked' && <button onClick={() => setShowEditFriend(true)} className="text-[10px] font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded-md transition-all flex-shrink-0">Edit</button>}</div>
                     <p className="text-[10px] text-gray-400 truncate">{selected.relation === 'linked' ? 'Added you' : 'Friend'}</p>
                   </div>
                   <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
@@ -450,7 +452,7 @@ export default function Transactions() {
           <div className="fixed inset-0 bg-black/30" onClick={() => setShowEmailModal(false)} />
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-5">
             <div className="flex items-center justify-between mb-3"><h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Share Statement</h2><button onClick={() => setShowEmailModal(false)} className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white/10 rounded-lg"><FiX size={16} /></button></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Send {selected?.name}'s statement to an email.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Send {selected?.relation === 'linked' ? selected?.addedBy : selected?.name}'s statement to an email.</p>
             <input type="email" className="w-full bg-gray-50 dark:bg-white/5 border-0 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/30 focus:outline-none text-gray-900 dark:text-gray-100 mb-3" placeholder="friend@example.com" value={emailAddr} onChange={(e) => setEmailAddr(e.target.value)} />
             <div className="flex justify-end gap-2.5">
               <button onClick={() => setShowEmailModal(false)} className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 font-medium text-xs hover:bg-gray-200 dark:hover:bg-white/10 transition-all">Cancel</button>
@@ -467,7 +469,7 @@ export default function Transactions() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/30" onClick={() => setShowEditFriend(false)} />
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-5">
-            <div className="flex items-center justify-between mb-3"><h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Edit {selected?.name}</h2><button onClick={() => setShowEditFriend(false)} className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white/10 rounded-lg"><FiX size={16} /></button></div>
+            <div className="flex items-center justify-between mb-3"><h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Edit {selected?.relation === 'linked' ? selected?.addedBy : selected?.name}</h2><button onClick={() => setShowEditFriend(false)} className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white/10 rounded-lg"><FiX size={16} /></button></div>
             <div className="space-y-2.5">
               <div><label className="text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1 block">Name</label><input type="text" className="w-full bg-gray-50 dark:bg-white/5 border-0 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/30 focus:outline-none text-gray-900 dark:text-gray-100" value={editFriendForm.name} onChange={e => setEditFriendForm(p => ({ ...p, name: e.target.value }))} /></div>
               <div><label className="text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1 block">Phone</label><input type="tel" className="w-full bg-gray-50 dark:bg-white/5 border-0 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/30 focus:outline-none text-gray-900 dark:text-gray-100" value={editFriendForm.phone} onChange={e => setEditFriendForm(p => ({ ...p, phone: e.target.value }))} /></div>

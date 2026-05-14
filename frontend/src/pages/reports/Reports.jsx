@@ -277,8 +277,8 @@ export default function Reports() {
               {customers.filter(c => getBalance(c) > 0).slice(0, 5).map(c => (
                 <div key={c.id} className="flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-red-50/50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400">{c.name?.charAt(0)}</div>
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{c.name}</span>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400">{(c.relation === 'linked' ? c.addedBy : c.name)?.charAt(0)}</div>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{c.relation === 'linked' ? c.addedBy : c.name}</span>
                   </div>
                   <span className="text-xs font-bold text-red-500">owes you {fmt(getBalance(c))}</span>
                 </div>
@@ -286,8 +286,8 @@ export default function Reports() {
               {customers.filter(c => getBalance(c) < 0).slice(0, 5).map(c => (
                 <div key={c.id} className="flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-green-50/50 dark:bg-green-500/5 border border-green-100 dark:border-green-500/10">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400">{c.name?.charAt(0)}</div>
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{c.name}</span>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400">{(c.relation === 'linked' ? c.addedBy : c.name)?.charAt(0)}</div>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{c.relation === 'linked' ? c.addedBy : c.name}</span>
                   </div>
                   <span className="text-xs font-bold text-green-600">you owe {fmt(Math.abs(getBalance(c)))}</span>
                 </div>
